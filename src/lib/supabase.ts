@@ -22,12 +22,16 @@ export async function createServerSupabase() {
   )
 }
 
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+export function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
-export const sharedDb = createClient(
-  process.env.SHARED_DB_URL!,
-  process.env.SHARED_DB_SERVICE_ROLE_KEY!
-)
+export function getSharedDb() {
+  return createClient(
+    process.env.SHARED_DB_URL!,
+    process.env.SHARED_DB_SERVICE_ROLE_KEY!
+  )
+}
