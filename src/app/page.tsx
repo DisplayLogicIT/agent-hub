@@ -1,10 +1,10 @@
 import Navbar from '@/components/Navbar'
 import AgentGrid from '@/components/AgentGrid'
-import { createServerSupabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase'
 import type { Agent } from '@/lib/types'
 
 export default async function Home() {
-  const supabase = await createServerSupabase()
+  const supabase = createSupabaseServerClient()
   const { data } = await supabase
     .from('agents')
     .select('*, agent_files(count)')

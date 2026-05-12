@@ -1,37 +1,36 @@
 import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 
-export async function createServerSupabase() {
-  const cookieStore = await cookies()
-  return createServerClient(
+// Browser client — uses anon key, RLS applied
+export function createSupabaseBrowserClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+
+// Server client — uses anon key, RLS applied
+export function createSupabaseServerClient() {
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {}
-        },
-      },
-    }
+    { auth: { persistSession: false, autoRefreshToken: false } }
   )
 }
 
-export function getSupabaseAdmin() {
+// Admin client — uses service role, bypasses RLS
+export function createSupabaseAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
   )
 }
 
-export function getSharedDb() {
+// Shared DisplayLogicIT DB — all agents
+export function createSharedDbClient() {
   return createClient(
     process.env.SHARED_DB_URL!,
-    process.env.SHARED_DB_SERVICE_ROLE_KEY!
+    process.env.SHARED_DB_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
   )
 }
