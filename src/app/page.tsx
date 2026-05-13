@@ -1,4 +1,3 @@
-import Navbar from '@/components/Navbar'
 import AgentGrid from '@/components/AgentGrid'
 import { createSupabaseServerClient } from '@/lib/supabase'
 import type { Agent } from '@/lib/types'
@@ -16,19 +15,14 @@ export default async function Home() {
   }))
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <Navbar />
-      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold text-gray-100 tracking-tight">
-            Your Agents
-          </h1>
-          <p className="text-sm text-gray-600 font-mono mt-0.5">
-            {agents.length} agent{agents.length !== 1 ? 's' : ''} · Display Logic IT
-          </p>
-        </div>
-        <AgentGrid initialAgents={agents} />
-      </main>
-    </div>
+    <main className="max-w-screen-xl mx-auto px-6 py-8">
+      <div className="mb-8">
+        <h1 className="text-xl font-semibold text-gray-100 tracking-tight">Your Agents</h1>
+        <p className="text-sm text-gray-600 font-mono mt-0.5">
+          {agents.length} agent{agents.length !== 1 ? 's' : ''} · Display Logic IT
+        </p>
+      </div>
+      <AgentGrid initialAgents={agents} />
+    </main>
   )
 }
