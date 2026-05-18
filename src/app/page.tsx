@@ -2,6 +2,8 @@ import AgentGrid from '@/components/AgentGrid'
 import { createSupabaseServerClient } from '@/lib/supabase'
 import type { Agent } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const supabase = createSupabaseServerClient()
   const { data } = await supabase
