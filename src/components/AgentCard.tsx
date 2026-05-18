@@ -54,7 +54,7 @@ export default function AgentCard({ agent, selected, onSelect, onClick, index = 
           ? 'border-indigo-500/60 shadow-[0_0_24px_rgba(99,102,241,0.12),0_0_0_1px_rgba(99,102,241,0.08)]'
           : 'border-[#181d2a] hover:border-[#262d42] hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)]',
       )}
-      style={{ animation: `card-in 480ms cubic-bezier(0.23,1,0.32,1) ${index * 50}ms both` }}
+      style={{ animation: `card-in 480ms cubic-bezier(0.23,1,0.32,1) ${index * 50}ms forwards` }}
       onClick={onClick}
     >
       {/* dot-grid texture */}
