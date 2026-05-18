@@ -22,9 +22,9 @@ export default function Sidebar({ recentAgents = [] }: Props) {
   const path = usePathname()
 
   return (
-    <aside className="w-52 shrink-0 bg-[#080a0e] border-r border-gray-900 flex flex-col h-screen sticky top-0">
+    <aside className="w-52 shrink-0 bg-[#070910] border-r border-[#181d2a] flex flex-col h-screen sticky top-0">
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-gray-900">
+      <div className="px-4 py-4 border-b border-[#181d2a]">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center shadow-[0_0_12px_rgba(99,102,241,0.4)] group-hover:shadow-[0_0_18px_rgba(99,102,241,0.6)] transition-shadow flex-shrink-0">
             <Bot size={15} className="text-white" />
@@ -46,10 +46,11 @@ export default function Sidebar({ recentAgents = [] }: Props) {
               href={disabled ? '#' : href}
               onClick={disabled ? e => e.preventDefault() : undefined}
               className={cn(
-                'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono transition-all',
-                active   ? 'bg-gray-800 border border-gray-700 text-gray-100' :
-                disabled ? 'text-gray-700 cursor-not-allowed' :
-                           'text-gray-500 hover:text-gray-300 hover:bg-gray-900'
+                'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono',
+                'transition-[background-color,border-color,color] duration-150',
+                active   ? 'bg-[#111420] border border-[#1e2438] text-gray-100' :
+                disabled ? 'text-gray-800 cursor-not-allowed' :
+                           'text-gray-600 hover:text-gray-300 hover:bg-[#0e1120] border border-transparent',
               )}
             >
               <Icon size={14} />
@@ -58,16 +59,17 @@ export default function Sidebar({ recentAgents = [] }: Props) {
           )
         })}
 
-        <div className="h-px bg-gray-900 my-2 mx-1" />
+        <div className="h-px bg-[#181d2a] my-2 mx-1" />
 
         {/* Agent Factory */}
         <Link
           href="/agents/new"
           className={cn(
-            'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono transition-all',
+            'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono',
+            'transition-[background-color,border-color,color,box-shadow] duration-150',
             path === '/agents/new'
-              ? 'bg-indigo-950 border border-indigo-700 text-indigo-300 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
-              : 'bg-indigo-950/40 border border-indigo-900/60 text-indigo-400 hover:border-indigo-700 hover:text-indigo-300'
+              ? 'bg-indigo-950 border border-indigo-700/60 text-indigo-300 shadow-[0_0_14px_rgba(99,102,241,0.18)]'
+              : 'bg-indigo-950/30 border border-indigo-900/40 text-indigo-500 hover:border-indigo-700/50 hover:text-indigo-300',
           )}
         >
           <Zap size={14} />
@@ -83,10 +85,11 @@ export default function Sidebar({ recentAgents = [] }: Props) {
                 key={agent.id}
                 href={`/agents/${agent.id}`}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all',
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-mono',
+                  'transition-[background-color,color] duration-150',
                   path === `/agents/${agent.id}`
-                    ? 'text-gray-300 bg-gray-900'
-                    : 'text-gray-600 hover:text-gray-400 hover:bg-gray-900/50'
+                    ? 'text-gray-300 bg-[#0e1120]'
+                    : 'text-gray-700 hover:text-gray-400 hover:bg-[#0e1120]',
                 )}
               >
                 <span className="text-sm leading-none">{agent.icon ?? '🤖'}</span>
@@ -98,7 +101,7 @@ export default function Sidebar({ recentAgents = [] }: Props) {
       </nav>
 
       {/* User */}
-      <div className="px-3 py-3 border-t border-gray-900 flex items-center gap-2.5">
+      <div className="px-3 py-3 border-t border-[#181d2a] flex items-center gap-2.5">
         <UserButton appearance={{ elements: { avatarBox: 'w-6 h-6' } }} />
         <span className="text-[11px] font-mono text-gray-600 truncate">Keith</span>
       </div>

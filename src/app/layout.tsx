@@ -24,7 +24,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <ClerkProvider>
       <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-        <body className="h-full flex bg-gray-950 text-white">
+        <body className="h-full flex text-white">
           <Sidebar recentAgents={recentAgents ?? []} />
           <div className="flex-1 overflow-y-auto">
             {children}
