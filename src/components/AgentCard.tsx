@@ -171,7 +171,7 @@ export default function AgentCard({ agent, selected, onSelect, onClick, index = 
             <Zap size={9} className="opacity-50" />
             {agent.avg_manual_minutes > 0 ? `${agent.avg_manual_minutes}m/run` : '—'}
           </span>
-          <span className="flex items-center gap-1 text-[10.5px] text-gray-700 font-mono">
+          <span suppressHydrationWarning className="flex items-center gap-1 text-[10.5px] text-gray-700 font-mono">
             <Clock size={9} className="opacity-50" />
             {timeAgo(agent.created_at)}
           </span>
