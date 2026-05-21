@@ -18,32 +18,43 @@ export default function AgentFactoryPage() {
     setBuildState('building')
     setBuildLog(['Starting build...'])
 
-    const res = await fetch('/api/factory/build', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan }),
-    })
+    try {
+      const res = await fetch('/api/factory/build', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      })
 
-    if (!res.ok || !res.body) {
-      setBuildState('error')
-      setBuildLog(p => [...p, 'Build failed — check the console.'])
-      return
-    }
-
-    const reader = res.body.getReader()
-    const decoder = new TextDecoder()
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      for (const line of decoder.decode(value, { stream: true }).split('\n').filter(Boolean)) {
-        try {
-          const event = JSON.parse(line)
-          if (event.type === 'log')   setBuildLog(p => [...p, event.message])
-          if (event.type === 'done')  { setBuiltAgent({ id: event.agentId, slug: event.slug, plan }); setBuildState('done'); setShowConfig(true) }
-          if (event.type === 'error') { setBuildState('error'); setBuildLog(p => [...p, `Error: ${event.message}`]) }
-        } catch {}
+      if (!res.ok || !res.body) {
+        setBuildState('error')
+        setBuildLog(p => [...p, 'Build failed — check the console.'])
+        return
       }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let resolved = false
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        for (const line of decoder.decode(value, { stream: true }).split('\n').filter(Boolean)) {
+          try {
+            const event = JSON.parse(line)
+            if (event.type === 'log')   setBuildLog(p => [...p, event.message])
+            if (event.type === 'done')  { resolved = true; setBuiltAgent({ id: event.agentId, slug: event.slug, plan }); setBuildState('done'); setShowConfig(true) }
+            if (event.type === 'error') { resolved = true; setBuildState('error'); setBuildLog(p => [...p, `Error: ${event.message}`]) }
+          } catch {}
+        }
+      }
+
+      if (!resolved) {
+        setBuildState('error')
+        setBuildLog(p => [...p, 'Build timed out or was interrupted. Check Vercel logs.'])
+      }
+    } catch (err) {
+      setBuildState('error')
+      setBuildLog(p => [...p, `Build failed: ${err instanceof Error ? err.message : String(err)}`])
     }
   }
 

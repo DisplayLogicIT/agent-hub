@@ -1,6 +1,8 @@
 import { buildAgent } from '@/lib/factory/builder'
 import type { ParsedPlan } from '@/lib/factory/prompts'
 
+export const maxDuration = 300
+
 export async function POST(req: Request) {
   const { plan } = await req.json() as { plan: ParsedPlan }
   if (!plan?.name) return Response.json({ error: 'plan required' }, { status: 400 })
