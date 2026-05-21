@@ -1,9 +1,10 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
-import { Bot, LayoutGrid, Zap, Settings, FolderOpen, BarChart3 } from 'lucide-react'
+import { Bot, LayoutGrid, Zap, Settings, FolderOpen, BarChart3, Wrench } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Agent } from '@/lib/types'
 
@@ -20,6 +21,14 @@ interface Props {
 
 export default function Sidebar({ recentAgents = [] }: Props) {
   const path = usePathname()
+  const [hasDraft, setHasDraft] = useState(false)
+
+  useEffect(() => {
+    setHasDraft(!!localStorage.getItem('agent-hub:draft-id'))
+    const onStorage = () => setHasDraft(!!localStorage.getItem('agent-hub:draft-id'))
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   return (
     <aside className="w-52 shrink-0 bg-[#070910] border-r border-[#181d2a] flex flex-col h-screen sticky top-0">
@@ -60,6 +69,24 @@ export default function Sidebar({ recentAgents = [] }: Props) {
         })}
 
         <div className="h-px bg-[#181d2a] my-2 mx-1" />
+
+        {/* Workshop */}
+        <Link
+          href="/agents/workshop"
+          className={cn(
+            'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono',
+            'transition-[background-color,border-color,color] duration-150',
+            path === '/agents/workshop'
+              ? 'bg-[#111420] border border-[#1e2438] text-gray-100'
+              : 'text-gray-600 hover:text-gray-300 hover:bg-[#0e1120] border border-transparent',
+          )}
+        >
+          <Wrench size={14} />
+          <span className="flex-1">Workshop</span>
+          {hasDraft && (
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+          )}
+        </Link>
 
         {/* Agent Factory */}
         <Link
