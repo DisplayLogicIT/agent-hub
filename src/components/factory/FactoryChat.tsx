@@ -9,17 +9,20 @@ import type { ChatMessage, BuildPlan } from '@/lib/types'
 
 interface Props {
   onBuildApproved: (plan: BuildPlan) => void
+  onPlanGenerated: (plan: BuildPlan, messages: ChatMessage[]) => void
   building: boolean
+  initialMessages?: ChatMessage[]
 }
 
-export default function FactoryChat({ onBuildApproved, building }: Props) {
-  const [messages, setMessages] = useState<ChatMessage[]>([{
+export default function FactoryChat({ onBuildApproved, onPlanGenerated, building, initialMessages }: Props) {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? [{
     role: 'assistant',
     content: `Hey Keith 👋 I'm your Agent Factory. Tell me what kind of agent you want to build and I'll take care of the rest.\n\nI'll work out the system prompt, tools, database schema, and required credentials — then create the GitHub repo, deploy to Vercel, and register it in your hub.\n\nWhat do you want to build?`,
   }])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const lastPlanNameRef = useRef<string | null>(null)
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -59,6 +62,12 @@ export default function FactoryChat({ onBuildApproved, building }: Props) {
         updated[updated.length - 1] = { role: 'assistant', content: full, plan }
         return updated
       })
+
+      if (plan && plan.name !== lastPlanNameRef.current) {
+        lastPlanNameRef.current = plan.name
+        const snapshot = [...next, { role: 'assistant' as const, content: full, plan }]
+        onPlanGenerated(plan, snapshot)
+      }
     }
     setStreaming(false)
   }
