@@ -74,3 +74,15 @@ export interface ChatMessage {
   content: string
   plan?: BuildPlan
 }
+
+export interface AgentDraft {
+  id: string
+  plan: BuildPlan
+  messages: ChatMessage[]
+  status: 'plan-ready' | 'building' | 'built' | 'failed'
+  build_log: string[]
+  error_message: string | null
+  agent_id: string | null
+  created_at: string
+  updated_at: string
+}
