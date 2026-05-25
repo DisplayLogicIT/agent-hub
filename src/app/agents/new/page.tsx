@@ -54,6 +54,7 @@ export default function AgentFactoryPage() {
           setBuildState('error')
         } else if (draft.status === 'built' || draft.status === 'failed') {
           localStorage.removeItem(LS_KEY)
+          localStorage.removeItem('agent-hub:factory-messages')
         }
       } catch {
         localStorage.removeItem(LS_KEY)
@@ -156,6 +157,7 @@ export default function AgentFactoryPage() {
               setBuildState('done')
               setShowConfig(true)
               localStorage.removeItem(LS_KEY)
+              localStorage.removeItem('agent-hub:factory-messages')
               if (draftId) {
                 await fetch(`/api/factory/draft/${draftId}`, {
                   method: 'PATCH',

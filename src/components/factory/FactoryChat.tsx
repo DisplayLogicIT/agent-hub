@@ -7,24 +7,47 @@ import { parseBuildPlan } from '@/lib/factory/prompts'
 import BuildPlanCard from './BuildPlanCard'
 import type { ChatMessage, BuildPlan } from '@/lib/types'
 
+const LS_MESSAGES_KEY = 'agent-hub:factory-messages'
+
+function loadSavedMessages(): ChatMessage[] | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(LS_MESSAGES_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
 interface Props {
   onBuildApproved: (plan: BuildPlan) => void
   onPlanGenerated: (plan: BuildPlan, messages: ChatMessage[]) => void
   building: boolean
   initialMessages?: ChatMessage[]
+  onClearMessages?: () => void
 }
 
 export default function FactoryChat({ onBuildApproved, onPlanGenerated, building, initialMessages }: Props) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? [{
+  const WELCOME_MSG: ChatMessage = {
     role: 'assistant',
     content: `Hey Keith 👋 I'm your Agent Factory. Tell me what kind of agent you want to build and I'll take care of the rest.\n\nI'll work out the system prompt, tools, database schema, and required credentials — then create the GitHub repo, deploy to Vercel, and register it in your hub.\n\nWhat do you want to build?`,
-  }])
+  }
+
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    () => initialMessages ?? loadSavedMessages() ?? [WELCOME_MSG]
+  )
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const lastPlanNameRef = useRef<string | null>(null)
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  useEffect(() => {
+    if (messages.length <= 1 && messages[0]?.content === WELCOME_MSG.content) {
+      localStorage.removeItem(LS_MESSAGES_KEY)
+    } else {
+      try { localStorage.setItem(LS_MESSAGES_KEY, JSON.stringify(messages)) } catch {}
+    }
+  }, [messages]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function send() {
     const text = input.trim()
