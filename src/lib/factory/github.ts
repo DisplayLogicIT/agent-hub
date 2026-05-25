@@ -21,7 +21,13 @@ export async function createRepoFromTemplate(slug: string) {
     method: 'POST',
     body: JSON.stringify({ owner: ORG(), name: slug, private: true }),
   })
-  if (!res.ok) throw new Error(`GitHub create repo: ${await res.text()}`)
+  if (!res.ok) {
+    const body = await res.text()
+    const hint = res.status === 404
+      ? ' (Is agent-template marked as a Template Repository in GitHub settings?)'
+      : ''
+    throw new Error(`GitHub create repo ${res.status}: ${body}${hint}`)
+  }
   const data = await res.json()
   return { repoUrl: data.html_url as string }
 }
