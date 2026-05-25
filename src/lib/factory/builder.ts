@@ -3,10 +3,30 @@ import { createVercelProject, setEnvVars, triggerDeploy } from './vercel-api'
 import { createSupabaseAdminClient } from '@/lib/supabase'
 import type { ParsedPlan } from './prompts'
 
+export type StepStatus = 'pending' | 'running' | 'done' | 'error'
+
+export interface BuildStep {
+  index: number
+  label: string
+  status: StepStatus
+  elapsed?: number  // ms
+}
+
 export type BuildEvent =
   | { type: 'log';   message: string }
+  | { type: 'step';  step: BuildStep }
   | { type: 'done';  agentId: string; slug: string; vercelUrl: string }
   | { type: 'error'; message: string }
+
+const STEP_LABELS = [
+  'Create GitHub repo',
+  'Wait for repo',
+  'Write agent logic',
+  'Update metadata',
+  'Create Vercel project',
+  'Inject env vars & deploy',
+  'Register in hub',
+] as const
 
 function makeAgentTs(plan: ParsedPlan): string {
   const toolsDef = plan.tools.map(t => `  {
@@ -73,34 +93,56 @@ export async function* buildAgent(plan: ParsedPlan): AsyncGenerator<BuildEvent> 
   const org = process.env.GITHUB_ORG!
   const slug = plan.name
 
+  function* startStep(index: number): Generator<BuildEvent> {
+    yield { type: 'step', step: { index, label: STEP_LABELS[index], status: 'running' } }
+  }
+  function* doneStep(index: number, startMs: number): Generator<BuildEvent> {
+    yield { type: 'step', step: { index, label: STEP_LABELS[index], status: 'done', elapsed: Date.now() - startMs } }
+  }
+
+  let t: number
   try {
+    // Step 0: Create GitHub repo
+    yield* startStep(0); t = Date.now()
     yield { type: 'log', message: `Creating GitHub repo ${org}/${slug}...` }
     await createRepoFromTemplate(slug)
-    yield { type: 'log', message: 'Repo created.' }
+    yield* doneStep(0, t)
 
+    // Step 1: Wait for repo
+    yield* startStep(1); t = Date.now()
     yield { type: 'log', message: 'Waiting for repo to initialise...' }
     await waitForRepo(slug)
-    yield { type: 'log', message: 'Repo ready.' }
+    yield* doneStep(1, t)
 
+    // Step 2: Write agent logic
+    yield* startStep(2); t = Date.now()
     yield { type: 'log', message: 'Writing agent logic...' }
     const { sha: agentSha } = await getFile(slug, 'lib/agent/agent.ts')
     await updateFile(slug, 'lib/agent/agent.ts', makeAgentTs(plan), agentSha, 'Factory: write agent logic')
-
     if (plan.schema) {
       yield { type: 'log', message: 'Writing database schema...' }
       const { sha: schemaSha } = await getFile(slug, 'supabase/migrations/001_initial.sql')
       await updateFile(slug, 'supabase/migrations/001_initial.sql', plan.schema, schemaSha, 'Factory: write schema')
     }
+    yield* doneStep(2, t)
 
+    // Step 3: Update metadata
+    yield* startStep(3); t = Date.now()
     yield { type: 'log', message: 'Updating metadata...' }
     const { content: layoutSrc, sha: layoutSha } = await getFile(slug, 'app/layout.tsx')
     const newLayout = layoutSrc.replace(/title: ['"].*?['"]/, `title: '${plan.displayName} — Display Logic IT'`)
     await updateFile(slug, 'app/layout.tsx', newLayout, layoutSha, 'Factory: update title')
+    yield* doneStep(3, t)
 
+    // Step 4: Create Vercel project
+    yield* startStep(4); t = Date.now()
     yield { type: 'log', message: 'Creating Vercel project...' }
     const { projectId, projectUrl } = await createVercelProject(slug, org)
     yield { type: 'log', message: `Vercel project: ${projectUrl}` }
+    yield* doneStep(4, t)
 
+    // Step 5: Inject env vars & deploy
+    yield* startStep(5); t = Date.now()
     yield { type: 'log', message: 'Injecting standard env vars...' }
     await setEnvVars(projectId, [
       { key: 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',            value: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY! },
@@ -113,12 +155,12 @@ export async function* buildAgent(plan: ParsedPlan): AsyncGenerator<BuildEvent> 
       { key: 'SHARED_DB_URL',                                value: process.env.SHARED_DB_URL! },
       { key: 'SHARED_DB_SERVICE_ROLE_KEY',                   value: process.env.SHARED_DB_SERVICE_ROLE_KEY! },
     ])
-    yield { type: 'log', message: 'Env vars set.' }
-
     yield { type: 'log', message: 'Triggering deploy...' }
     await triggerDeploy(projectId, slug)
-    yield { type: 'log', message: 'Deploy triggered.' }
+    yield* doneStep(5, t)
 
+    // Step 6: Register in hub
+    yield* startStep(6); t = Date.now()
     yield { type: 'log', message: 'Registering in hub...' }
     const supabase = createSupabaseAdminClient()
     const { data: row, error } = await supabase
@@ -141,7 +183,7 @@ export async function* buildAgent(plan: ParsedPlan): AsyncGenerator<BuildEvent> 
       .single()
 
     if (error) throw new Error(`Hub registration: ${error.message}`)
-    yield { type: 'log', message: 'Registered in hub.' }
+    yield* doneStep(6, t)
     yield { type: 'done', agentId: row.id, slug, vercelUrl: projectUrl }
   } catch (err: unknown) {
     yield { type: 'error', message: err instanceof Error ? err.message : String(err) }
