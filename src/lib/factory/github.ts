@@ -23,6 +23,10 @@ export async function createRepoFromTemplate(slug: string) {
   })
   if (!res.ok) {
     const body = await res.text()
+    // [DEBUG-gh01] surface exact request context for diagnosis
+    console.error('[DEBUG-gh01] token prefix:', TOKEN().slice(0, 8))
+    console.error('[DEBUG-gh01] tOwner:', tOwner, 'tName:', tName, 'org:', ORG(), 'slug:', slug)
+    console.error('[DEBUG-gh01] status:', res.status, 'body:', body)
     const hint = res.status === 404
       ? ' (Is agent-template marked as a Template Repository in GitHub settings?)'
       : ''
