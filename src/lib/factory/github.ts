@@ -1,9 +1,13 @@
+import { assertAllowedHost } from '@/lib/egress';
+
 const GH = 'https://api.github.com'
 const TOKEN = () => process.env.GITHUB_TOKEN!
 const ORG   = () => process.env.GITHUB_ORG!
 
 function gh(path: string, init: RequestInit = {}) {
-  return fetch(`${GH}${path}`, {
+  const url = `${GH}${path}`;
+  assertAllowedHost(url);
+  return fetch(url, {
     ...init,
     headers: {
       Authorization: `Bearer ${TOKEN()}`,

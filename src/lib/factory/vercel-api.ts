@@ -1,3 +1,5 @@
+import { assertAllowedHost } from '@/lib/egress';
+
 const VERCEL = 'https://api.vercel.com'
 const TOKEN   = () => process.env.VERCEL_TOKEN!
 const TEAM_ID = () => process.env.VERCEL_TEAM_ID!
@@ -9,7 +11,9 @@ function vUrl(path: string) {
 }
 
 function vFetch(path: string, init: RequestInit = {}) {
-  return fetch(vUrl(path), {
+  const url = vUrl(path);
+  assertAllowedHost(url);
+  return fetch(url, {
     ...init,
     headers: { Authorization: `Bearer ${TOKEN()}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
   })
